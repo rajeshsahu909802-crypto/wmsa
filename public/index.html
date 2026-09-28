@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>World Monitor - Real-Time Global Monitoring</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="app.css">
+</head>
+<body>
+  <!-- Login Screen -->
+  <div id="loginScreen" class="login-screen">
+    <div class="login-bg-effects">
+      <div class="globe-container">
+        <div class="globe">
+          <div class="globe-ring ring-1"></div>
+          <div class="globe-ring ring-2"></div>
+          <div class="globe-ring ring-3"></div>
+          <div class="globe-dot" style="--delay:0s; --x:30%; --y:20%"></div>
+          <div class="globe-dot" style="--delay:0.5s; --x:70%; --y:35%"></div>
+          <div class="globe-dot" style="--delay:1s; --x:45%; --y:60%"></div>
+          <div class="globe-dot" style="--delay:1.5s; --x:80%; --y:70%"></div>
+          <div class="globe-dot" style="--delay:2s; --x:20%; --y:50%"></div>
+        </div>
+      </div>
+    </div>
+    <div class="login-card">
+      <div class="login-header">
+        <div class="login-logo">
+          <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+            <circle cx="24" cy="24" r="22" stroke="url(#grad1)" stroke-width="2"/>
+            <ellipse cx="24" cy="24" rx="14" ry="22" stroke="url(#grad1)" stroke-width="1.5" opacity="0.6"/>
+            <ellipse cx="24" cy="24" rx="22" ry="10" stroke="url(#grad1)" stroke-width="1.5" opacity="0.6"/>
+            <circle cx="24" cy="24" r="3" fill="url(#grad1)"/>
+            <defs><linearGradient id="grad1" x1="0" y1="0" x2="48" y2="48"><stop stop-color="#00D4FF"/><stop offset="1" stop-color="#7B2FFF"/></linearGradient></defs>
+          </svg>
+        </div>
+        <h1>World Monitor</h1>
+        <p class="login-subtitle">Global Real-Time Monitoring Platform</p>
+      </div>
+      <form id="loginForm" class="login-form" autocomplete="off">
+        <div class="input-group">
+          <label for="username">Username</label>
+          <div class="input-wrapper">
+            <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            <input type="text" id="username" placeholder="Enter username" required>
+          </div>
+        </div>
+        <div class="input-group">
+          <label for="password">Password</label>
+          <div class="input-wrapper">
+            <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            <input type="password" id="password" placeholder="Enter password" required>
+          </div>
+        </div>
+        <div class="login-actions">
+          <label class="remember-me"><input type="checkbox"> Remember me</label>
+          <a href="#" class="forgot-link">Forgot password?</a>
+        </div>
+        <button type="submit" class="login-btn" id="loginBtn">
+          <span>Sign In</span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </button>
+        <div id="loginError" class="login-error" style="display:none"></div>
+      </form>
+      <div class="login-footer">
+        <p>Demo credentials: <code>admin</code> / <code>admin123</code></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Application -->
+  <div id="appScreen" class="app-screen" style="display:none">
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <div class="sidebar-logo">
+          <svg width="32" height="32" viewBox="0 0 48 48" fill="none">
+            <circle cx="24" cy="24" r="22" stroke="url(#grad2)" stroke-width="2"/>
+            <ellipse cx="24" cy="24" rx="14" ry="22" stroke="url(#grad2)" stroke-width="1.5" opacity="0.6"/>
+            <circle cx="24" cy="24" r="3" fill="url(#grad2)"/>
+            <defs><linearGradient id="grad2" x1="0" y1="0" x2="48" y2="48"><stop stop-color="#00D4FF"/><stop offset="1" stop-color="#7B2FFF"/></linearGradient></defs>
+          </svg>
+          <span>World Monitor</span>
+        </div>
+      </div>
+      <nav class="sidebar-nav">
+        <a href="#" class="nav-item active" data-page="dashboard" id="navDashboard">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+          <span>Dashboard</span>
+        </a>
+        <a href="#" class="nav-item" data-page="analytics" id="navAnalytics">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>
+          <span>Analytics</span>
+        </a>
+        <a href="#" class="nav-item" data-page="reports" id="navReports">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          <span>Reports</span>
+        </a>
+        <a href="#" class="nav-item" data-page="alerts" id="navAlerts">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+          <span>Alerts</span>
+          <span class="nav-badge">3</span>
+        </a>
+        <a href="#" class="nav-item" data-page="search" id="navSearch">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+          <span>Search</span>
+        </a>
+        <div class="nav-divider"></div>
+        <a href="#" class="nav-item" data-page="users" id="navUsers">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          <span>User Management</span>
+        </a>
+        <a href="#" class="nav-item" data-page="settings" id="navSettings">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          <span>Settings</span>
+        </a>
+      </nav>
+      <div class="sidebar-footer">
+        <div class="user-profile" id="userProfile">
+          <div class="user-avatar" id="userAvatar">A</div>
+          <div class="user-info">
+            <span class="user-name" id="userName">Admin</span>
+            <span class="user-role" id="userRole">Administrator</span>
+          </div>
+        </div>
+        <button class="logout-btn" id="logoutBtn" title="Logout">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        </button>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <!-- Topbar -->
+      <header class="topbar">
+        <button class="menu-toggle" id="menuToggle">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+        </button>
+        <div class="topbar-search">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+          <input type="text" placeholder="Search monitoring data..." id="topSearch">
+        </div>
+        <div class="topbar-actions">
+          <button class="topbar-btn" id="notifBtn" title="Notifications">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+            <span class="notif-dot"></span>
+          </button>
+          <a href="/security-dashboard" class="topbar-btn security-link" title="Security Dashboard">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          </a>
+        </div>
+      </header>
+
+      <!-- Page Content -->
+      <div class="page-content" id="pageContent">
+        <!-- Dashboard Page (default) -->
+        <div class="page active" id="pageDashboard">
+          <div class="page-header">
+            <div>
+              <h1>Global Dashboard</h1>
+              <p class="page-desc">Real-time monitoring across all regions</p>
+            </div>
+            <div class="page-header-actions">
+              <span class="live-indicator"><span class="live-dot"></span> Live</span>
+              <button class="btn btn-primary" id="refreshBtn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+                Refresh
+              </button>
+            </div>
+          </div>
+
+          <!-- Stats Cards -->
+          <div class="stats-grid">
+            <div class="stat-card" id="statRegions">
+              <div class="stat-icon" style="--accent:#00D4FF">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+              </div>
+              <div class="stat-info">
+                <span class="stat-value" id="regionCount">6</span>
+                <span class="stat-label">Active Regions</span>
+              </div>
+              <div class="stat-trend up">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/></svg>
+                +2 this week
+              </div>
+            </div>
+            <div class="stat-card" id="statAlerts">
+              <div class="stat-icon" style="--accent:#FF4D6A">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+              </div>
+              <div class="stat-info">
+                <span class="stat-value" id="alertCount">3</span>
+                <span class="stat-label">Active Alerts</span>
+              </div>
+              <div class="stat-trend down">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polyline points="23 18 13.5 8.5 8.5 13.5 1 6"/></svg>
+                -5 vs last week
+              </div>
+            </div>
+            <div class="stat-card" id="statUptime">
+              <div class="stat-icon" style="--accent:#00E676">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+              </div>
+              <div class="stat-info">
+                <span class="stat-value">99.7%</span>
+                <span class="stat-label">Uptime</span>
+              </div>
+              <div class="stat-trend up">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/></svg>
+                +0.2% this month
+              </div>
+            </div>
+            <div class="stat-card" id="statLatency">
+              <div class="stat-icon" style="--accent:#FFB300">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              </div>
+              <div class="stat-info">
+                <span class="stat-value">42ms</span>
+                <span class="stat-label">Avg Latency</span>
+              </div>
+              <div class="stat-trend up">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/></svg>
+                -8ms improved
+              </div>
+            </div>
+          </div>
+
+          <!-- Charts Row -->
+          <div class="charts-grid">
+            <div class="chart-card" id="chartMain">
+              <div class="chart-header">
+                <h3>System Performance</h3>
+                <div class="chart-tabs">
+                  <button class="chart-tab active">1H</button>
+                  <button class="chart-tab">6H</button>
+                  <button class="chart-tab">24H</button>
+                  <button class="chart-tab">7D</button>
+                </div>
+              </div>
+              <div class="chart-body">
+                <canvas id="perfChart" height="280"></canvas>
+              </div>
+            </div>
+            <div class="chart-card" id="chartRegion">
+              <div class="chart-header">
+                <h3>Regional Status</h3>
+              </div>
+              <div class="chart-body">
+                <div class="region-list" id="regionList"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Monitoring Table -->
+          <div class="table-card" id="monitoringTable">
+            <div class="table-header">
+              <h3>Monitoring Data</h3>
+              <button class="btn btn-ghost" id="exportBtn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                Export
+              </button>
+            </div>
+            <div class="table-body">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Region</th>
+                    <th>Metric</th>
+                    <th>Value</th>
+                    <th>Status</th>
+                    <th>Last Updated</th>
+                  </tr>
+                </thead>
+                <tbody id="monitoringBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Search Page -->
+        <div class="page" id="pageSearch" style="display:none">
+          <div class="page-header">
+            <div>
+              <h1>Data Search</h1>
+              <p class="page-desc">Search monitoring data across all regions</p>
+            </div>
+          </div>
+          <div class="search-panel">
+            <div class="search-input-large">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+              <input type="text" id="searchQuery" placeholder="Search by region, metric, or keyword...">
+              <button class="btn btn-primary" id="searchBtn">Search</button>
+            </div>
+            <div class="search-info">
+              <p>⚠️ <strong>Security Note:</strong> This search field is vulnerable to SQL injection for assessment purposes.</p>
+            </div>
+            <div id="searchResults" class="search-results"></div>
+            <div id="searchQueryDisplay" class="search-query-display" style="display:none"></div>
+          </div>
+        </div>
+
+        <!-- Reports Page -->
+        <div class="page" id="pageReports" style="display:none">
+          <div class="page-header">
+            <div>
+              <h1>Reports</h1>
+              <p class="page-desc">Access classified and analytical reports</p>
+            </div>
+          </div>
+          <div class="reports-grid" id="reportsGrid"></div>
+        </div>
+
+        <!-- Alerts Page -->
+        <div class="page" id="pageAlerts" style="display:none">
+          <div class="page-header">
+            <div>
+              <h1>Active Alerts</h1>
+              <p class="page-desc">System alerts and notifications</p>
+            </div>
+          </div>
+          <div class="alerts-list" id="alertsList"></div>
+        </div>
+
+        <!-- Users Page -->
+        <div class="page" id="pageUsers" style="display:none">
+          <div class="page-header">
+            <div>
+              <h1>User Management</h1>
+              <p class="page-desc">Manage platform users and roles</p>
+            </div>
+            <button class="btn btn-primary" id="addUserBtn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              Add User
+            </button>
+          </div>
+          <div class="users-table-card">
+            <table>
+              <thead>
+                <tr>
+                  <th>User</th>
+                  <th>Email</th>
+                  <th>Role</th>
+                  <th>API Key</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="usersBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Analytics Page -->
+        <div class="page" id="pageAnalytics" style="display:none">
+          <div class="page-header">
+            <div>
+              <h1>Analytics</h1>
+              <p class="page-desc">In-depth performance analytics and trends</p>
+            </div>
+          </div>
+          <div class="analytics-grid">
+            <div class="chart-card full-width">
+              <div class="chart-header"><h3>Performance Trends (30 Days)</h3></div>
+              <div class="chart-body"><canvas id="analyticsChart" height="300"></canvas></div>
+            </div>
+            <div class="chart-card">
+              <div class="chart-header"><h3>Traffic Distribution</h3></div>
+              <div class="chart-body"><canvas id="trafficChart" height="250"></canvas></div>
+            </div>
+            <div class="chart-card">
+              <div class="chart-header"><h3>Error Rate by Region</h3></div>
+              <div class="chart-body"><canvas id="errorChart" height="250"></canvas></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Settings Page -->
+        <div class="page" id="pageSettings" style="display:none">
+          <div class="page-header">
+            <div>
+              <h1>Settings</h1>
+              <p class="page-desc">Application configuration and preferences</p>
+            </div>
+          </div>
+          <div class="settings-grid">
+            <div class="settings-card">
+              <h3>Profile Settings</h3>
+              <div class="settings-form">
+                <div class="input-group"><label>Display Name</label><input type="text" id="settingsName" value="Admin"></div>
+                <div class="input-group"><label>Email</label><input type="email" id="settingsEmail" value="admin@worldmonitor.com"></div>
+                <button class="btn btn-primary">Save Changes</button>
+              </div>
+            </div>
+            <div class="settings-card">
+              <h3>Security Settings</h3>
+              <div class="settings-form">
+                <div class="input-group"><label>Current Password</label><input type="password" placeholder="Enter current password"></div>
+                <div class="input-group"><label>New Password</label><input type="password" placeholder="Enter new password"></div>
+                <button class="btn btn-primary">Update Password</button>
+              </div>
+            </div>
+            <div class="settings-card danger">
+              <h3>Debug Configuration</h3>
+              <p class="text-muted">⚠️ Sensitive system configuration exposed without proper authorization.</p>
+              <button class="btn btn-danger" id="viewConfigBtn">View System Config</button>
+              <pre id="configDisplay" class="config-display" style="display:none"></pre>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

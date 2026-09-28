@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>World Monitor - Security Assessment Dashboard</title>
+  <meta name="description" content="Security vulnerability assessment and penetration testing report for the World Monitor application.">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="security-dashboard.css">
+</head>
+<body>
+  <!-- Header -->
+  <header class="sd-header">
+    <div class="sd-header-inner">
+      <div class="sd-brand">
+        <div class="sd-shield">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        </div>
+        <div>
+          <h1>Security Assessment</h1>
+          <p>World Monitor Application</p>
+        </div>
+      </div>
+      <div class="sd-header-actions">
+        <a href="/" class="sd-btn sd-btn-ghost">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+          Back to App
+        </a>
+        <button class="sd-btn sd-btn-primary" id="runAllBtn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+          Run All PoC Tests
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="sd-main">
+    <!-- Overview Cards -->
+    <section class="sd-overview">
+      <div class="sd-overview-card critical">
+        <div class="sd-ov-number" id="criticalCount">4</div>
+        <div class="sd-ov-label">Critical</div>
+        <div class="sd-ov-bar"></div>
+      </div>
+      <div class="sd-overview-card high">
+        <div class="sd-ov-number" id="highCount">3</div>
+        <div class="sd-ov-label">High</div>
+        <div class="sd-ov-bar"></div>
+      </div>
+      <div class="sd-overview-card medium">
+        <div class="sd-ov-number" id="mediumCount">2</div>
+        <div class="sd-ov-label">Medium</div>
+        <div class="sd-ov-bar"></div>
+      </div>
+      <div class="sd-overview-card low">
+        <div class="sd-ov-number" id="lowCount">1</div>
+        <div class="sd-ov-label">Low</div>
+        <div class="sd-ov-bar"></div>
+      </div>
+      <div class="sd-overview-card info-card">
+        <div class="sd-ov-number" id="totalCount">10</div>
+        <div class="sd-ov-label">Total Findings</div>
+        <div class="sd-ov-bar"></div>
+      </div>
+    </section>
+
+    <!-- Executive Summary -->
+    <section class="sd-section">
+      <div class="sd-section-header">
+        <h2>Executive Summary</h2>
+      </div>
+      <div class="sd-summary-content">
+        <div class="sd-summary-text">
+          <p>The security assessment of the <strong>World Monitor</strong> application has identified <strong>10 vulnerabilities</strong> across multiple severity levels. The application exhibits significant security weaknesses in authentication, authorization, input validation, and data protection mechanisms.</p>
+          <p>The most critical findings include <strong>weak JWT authentication</strong>, <strong>hardcoded credentials</strong>, <strong>sensitive data exposure via unprotected debug endpoints</strong>, and <strong>broken access controls</strong> that allow privilege escalation.</p>
+          <p><strong>Overall Risk Rating: HIGH</strong> — Immediate remediation is recommended before production deployment.</p>
+        </div>
+        <div class="sd-summary-chart">
+          <canvas id="severityChart" height="200"></canvas>
+        </div>
+      </div>
+    </section>
+
+    <!-- Vulnerability Findings -->
+    <section class="sd-section">
+      <div class="sd-section-header">
+        <h2>Vulnerability Findings</h2>
+        <div class="sd-filter-tabs">
+          <button class="sd-tab active" data-filter="all">All</button>
+          <button class="sd-tab" data-filter="critical">Critical</button>
+          <button class="sd-tab" data-filter="high">High</button>
+          <button class="sd-tab" data-filter="medium">Medium</button>
+          <button class="sd-tab" data-filter="low">Low</button>
+        </div>
+      </div>
+      <div class="sd-vulns" id="vulnList"></div>
+    </section>
+  </main>
+
+  <!-- PoC Result Modal -->
+  <div class="sd-modal-overlay" id="pocModal" style="display:none">
+    <div class="sd-modal">
+      <div class="sd-modal-header">
+        <h3 id="pocTitle">PoC Results</h3>
+        <button class="sd-modal-close" id="pocClose">&times;</button>
+      </div>
+      <div class="sd-modal-body" id="pocBody"></div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script src="security-dashboard.js"></script>
+</body>
+</html>

